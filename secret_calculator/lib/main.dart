@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:secret_calculator/models/gallery_model.dart';
 
+import 'pages/dashboard_page.dart';
 import 'pages/homepage.dart';
 import 'pages/startpage.dart';
 import 'ui/colors.dart';
@@ -31,6 +32,10 @@ class MyApp extends StatelessWidget {
       title: 'Calculator',
       themeMode: AppTheme.themeMode,
       theme: AppTheme.themeData,
+      initialRoute: '/dashboard',
+      routes: {
+        '/dashboard': (context) => const VaultDashboardScreen(),
+      },
       home: FutureBuilder<Box<String>>(
         future: Hive.openBox('appPassword'),
         builder: (context, boxSnapshot) {
