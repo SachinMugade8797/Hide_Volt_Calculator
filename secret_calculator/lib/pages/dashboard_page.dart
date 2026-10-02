@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:secret_calculator/features/video_page.dart';
 import 'package:secret_calculator/pages/gallery_page.dart';
 
 class VaultDashboardScreen extends StatelessWidget {
@@ -62,7 +63,14 @@ class VaultDashboardScreen extends StatelessWidget {
                       _MainFeature(
                         icon: Icons.video_library_outlined,
                         title: 'Videos',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const VideoPage(),
+                            ),
+                          );
+                        },
                       ),
                       _MainFeature(
                         icon: Icons.description_outlined,

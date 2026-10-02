@@ -44,7 +44,9 @@ class _GalleryPageState extends State<GalleryPage> {
               return ValueListenableBuilder<Box<Gallery>>(
                 valueListenable: galleryBoxSnapshot.data!.listenable(),
                 builder: (context, galleryBox, child) {
-                  final images = galleryBox.values.toList();
+                  final images = galleryBox.values
+                      .where((item) => item.type == 'image')
+                      .toList();
                   if (images.isEmpty) {
                     return const Center(child: Text("Add Images Here!"));
                   }
