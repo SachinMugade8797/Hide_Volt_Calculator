@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:secret_calculator/pages/gallery_page.dart';
 
 class VaultDashboardScreen extends StatelessWidget {
   const VaultDashboardScreen({super.key});
@@ -32,10 +33,6 @@ class VaultDashboardScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ------------------------------------------------------------
-            // MAIN FEATURES (pinned to the bottom, scrolls only if the
-            // screen is too small, so it can never overflow)
-            // ------------------------------------------------------------
             Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -49,40 +46,49 @@ class VaultDashboardScreen extends StatelessWidget {
                     childAspectRatio: 0.8,
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    children: const [
+                    children: [
                       _MainFeature(
                         icon: Icons.photo_library_outlined,
                         title: 'Photos',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const GalleryPage(),
+                            ),
+                          );
+                        },
                       ),
                       _MainFeature(
                         icon: Icons.video_library_outlined,
                         title: 'Videos',
+                        onTap: () {},
                       ),
                       _MainFeature(
                         icon: Icons.description_outlined,
                         title: 'Documents',
+                        onTap: () {},
                       ),
                       _MainFeature(
                         icon: Icons.note_alt_outlined,
                         title: 'Notes',
+                        onTap: () {},
                       ),
                       _MainFeature(
                         icon: Icons.language_outlined,
                         title: 'Private Browser',
+                        onTap: () {},
                       ),
                       _MainFeature(
                         icon: Icons.settings_outlined,
                         title: 'Settings',
+                        onTap: () {},
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-
-            // ------------------------------------------------------------
-            // FOOTER
-            // ------------------------------------------------------------
             Container(
               margin: const EdgeInsets.fromLTRB(16, 10, 16, 12),
               padding: const EdgeInsets.symmetric(
@@ -125,22 +131,20 @@ class VaultDashboardScreen extends StatelessWidget {
   }
 }
 
-// ==========================================================================
-// MAIN FEATURE
-// ==========================================================================
-
 class _MainFeature extends StatelessWidget {
   final IconData icon;
   final String title;
+  final VoidCallback? onTap;
 
   const _MainFeature({
     required this.icon,
     required this.title,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: const Color(0xFF121212),
@@ -181,12 +185,18 @@ class _MainFeature extends StatelessWidget {
         ],
       ),
     );
+    if (onTap == null) return child;
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: child,
+      ),
+    );
   }
 }
-
-// ==========================================================================
-// FOOTER ITEM
-// ==========================================================================
 
 class _FooterItem extends StatelessWidget {
   final IconData icon;

@@ -32,7 +32,6 @@ class _GalleryPageState extends State<GalleryPage> {
           title: const Text("Gallery"),
           actions: [actionButton()],
         ),
-        // await Hive.openBox<Gallery>('gallery');
         body: FutureBuilder<Box<Gallery>>(
           future: Hive.openBox('gallery'),
           builder: (context, galleryBoxSnapshot) {
@@ -119,7 +118,8 @@ class _GalleryPageState extends State<GalleryPage> {
     }
   }
 
-  GestureDetector imageGrid(BuildContext context, Gallery image, bool selected) {
+  GestureDetector imageGrid(
+      BuildContext context, Gallery image, bool selected) {
     return GestureDetector(
       onTap: () {
         if (selectionEnabled) {
