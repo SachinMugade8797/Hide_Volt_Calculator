@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
-import 'package:secret_calculator/pages/gallery_page.dart';
+import 'package:secret_calculator/features/gallery_page.dart';
 import 'package:secret_calculator/widgets/input_board.dart';
 
 import '../ui/colors.dart';

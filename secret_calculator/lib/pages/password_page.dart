@@ -5,7 +5,7 @@ import 'package:secret_calculator/pages/homepage.dart';
 
 import '../ui/colors.dart';
 import '../widgets/input_board.dart';
-import 'gallery_page.dart';
+import '../features/gallery_page.dart';
 
 class PasswordPage extends StatefulWidget {
   final bool? isPasswordChanging;

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:secret_calculator/features/notes.dart';
+import 'package:secret_calculator/features/private_browser.dart';
+import 'package:secret_calculator/features/settings.dart';
 import 'package:secret_calculator/features/video_page.dart';
-import 'package:secret_calculator/pages/gallery_page.dart';
+import 'package:secret_calculator/features/documents.dart';
+import 'package:secret_calculator/features/gallery_page.dart';
 
 class VaultDashboardScreen extends StatelessWidget {
   const VaultDashboardScreen({super.key});
@@ -75,22 +79,50 @@ class VaultDashboardScreen extends StatelessWidget {
                       _MainFeature(
                         icon: Icons.description_outlined,
                         title: 'Documents',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Documents(),
+                            ),
+                          );
+                        },
                       ),
                       _MainFeature(
                         icon: Icons.note_alt_outlined,
                         title: 'Notes',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Notes(),
+                            ),
+                          );
+                        },
                       ),
                       _MainFeature(
                         icon: Icons.language_outlined,
                         title: 'Private Browser',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PrivateBrowser(),
+                            ),
+                          );
+                        },
                       ),
                       _MainFeature(
                         icon: Icons.settings_outlined,
                         title: 'Settings',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const Settings(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
