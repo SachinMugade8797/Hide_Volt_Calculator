@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
-import 'package:secret_calculator/features/gallery_page.dart';
+import 'package:secret_calculator/pages/dashboard_page.dart';
 import 'package:secret_calculator/widgets/input_board.dart';
 
 import '../ui/colors.dart';
@@ -80,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                   return Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const GalleryPage(),
+                      builder: (context) => const VaultDashboardScreen(),
                     ),
                   );
                 }
