@@ -26,14 +26,26 @@ const List<String> _downloadExtensions = [
 String browserUrlFromInput(String input) {
   final text = input.trim();
   if (text.isEmpty) return _browserHome;
-  if (!text.contains('.') || text.contains(' ')) {
+  
+  final hasScheme = RegExp(r'^https?://', caseSensitive: false).hasMatch(text);
+  final hasLocalhost = text.toLowerCase().startsWith('localhost') ||
+      text.toLowerCase().startsWith('127.0.0.1');
+  final hasIp = RegExp(r'^\d+\.\d+\.\d+\.\d+').hasMatch(text);
+  
+  if (text.contains(' ') && !hasScheme) {
     return 'https://www.google.com/search?q=${Uri.encodeQueryComponent(text)}';
   }
-  final withScheme =
-      RegExp(r'^https?://', caseSensitive: false).hasMatch(text)
-          ? text
-          : 'https://$text';
-  return Uri.parse(withScheme).toString();
+  
+  if (!text.contains('.') && !hasScheme && !hasLocalhost && !hasIp) {
+    return 'https://www.google.com/search?q=${Uri.encodeQueryComponent(text)}';
+  }
+  
+  final withScheme = hasScheme ? text : 'https://$text';
+  try {
+    return Uri.parse(withScheme).toString();
+  } catch (_) {
+    return 'https://www.google.com/search?q=${Uri.encodeQueryComponent(text)}';
+  }
 }
 
 String browserHost(String url) {
@@ -228,6 +240,7 @@ class _PrivateBrowserState extends State<PrivateBrowser> {
 
   Future<void> _load() async {
     await _controller.setJavaScriptMode(JavaScriptMode.unrestricted);
+    await _controller.setBackgroundColor(Colors.black);
     await _controller.setNavigationDelegate(
       NavigationDelegate(
         onProgress: (progress) {
@@ -289,9 +302,39 @@ class _PrivateBrowserState extends State<PrivateBrowser> {
   }
 
   void _submitUrl(String input) {
-    final url = browserUrlFromInput(input);
-    _urlFocus.unfocus();
-    _openUrl(url);
+    String text = input.trim();
+    if (text.isEmpty) return;
+    
+    // Check if it has scheme
+    final hasScheme = RegExp(r'^https?://', caseSensitive: false).hasMatch(text);
+    final hasLocalhost = text.toLowerCase().startsWith('localhost') ||
+        text.toLowerCase().startsWith('127.0.0.1');
+    final hasIp = RegExp(r'^\d+\.\d+\.\d+\.\d+').hasMatch(text);
+    
+    // If it's a search query (contains space and no scheme), use Google search
+    if (text.contains(' ') && !hasScheme) {
+      final encoded = Uri.encodeQueryComponent(text);
+      _urlFocus.unfocus();
+      _openUrl('https://www.google.com/search?q=$encoded');
+      return;
+    }
+    
+    // If no dot and no scheme and not localhost/ip, treat as search
+    if (!text.contains('.') && !hasScheme && !hasLocalhost && !hasIp) {
+      final encoded = Uri.encodeQueryComponent(text);
+      _urlFocus.unfocus();
+      _openUrl('https://www.google.com/search?q=$encoded');
+      return;
+    }
+    
+    final withScheme = hasScheme ? text : 'https://$text';
+    try {
+      _urlFocus.unfocus();
+      _openUrl(Uri.parse(withScheme).toString());
+    } catch (_) {
+      final encoded = Uri.encodeQueryComponent(text);
+      _openUrl('https://www.google.com/search?q=$encoded');
+    }
   }
 
   void _openUrl(String url) {
