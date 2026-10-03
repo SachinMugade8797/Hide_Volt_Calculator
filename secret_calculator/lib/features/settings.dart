@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-
-import 'package:secret_calculator/pages/image_picker_page.dart';
-
-import '../functions/storage_permission_check.dart';
-import '../widgets/perminssion_denied_snackbar.dart';
+import 'package:secret_calculator/features/settings/security.dart';
+import 'package:secret_calculator/features/settings/vault_settings.dart';
+import 'package:secret_calculator/features/settings/notification.dart';
+import 'package:secret_calculator/features/settings/backup.dart';
+import 'package:secret_calculator/features/settings/storage.dart';
+import 'package:secret_calculator/features/settings/app_setting.dart';
+import 'package:secret_calculator/features/settings/about_page.dart';
 
 class Settings extends StatelessWidget {
   const Settings({super.key});
@@ -25,7 +27,12 @@ class Settings extends StatelessWidget {
             title: "Security",
             subtitle: "PIN, biometric and auto-lock settings",
             onTap: () {
-              // Open Security settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SecuritySettings(),
+                ),
+              );
             },
           ),
 
@@ -37,31 +44,12 @@ class Settings extends StatelessWidget {
             title: "Vault Settings",
             subtitle: "Manage private vault behavior",
             onTap: () {
-              // Open Vault settings
-            },
-          ),
-
-          const SizedBox(height: 6),
-
-          _settingsTile(
-            context,
-            icon: Icons.language_outlined,
-            title: "Private Browser",
-            subtitle: "Search engine, cache and browsing data",
-            onTap: () {
-              // Open Browser settings
-            },
-          ),
-
-          const SizedBox(height: 6),
-
-          _settingsTile(
-            context,
-            icon: Icons.palette_outlined,
-            title: "Appearance",
-            subtitle: "Theme and app appearance",
-            onTap: () {
-              // Open Appearance settings
+              Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const VaultSettings(),
+              ),
+            );
             },
           ),
 
@@ -73,7 +61,12 @@ class Settings extends StatelessWidget {
             title: "Notifications",
             subtitle: "Manage app notifications and alerts",
             onTap: () {
-              // Open Notification settings
+              Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationSettings(),
+              ),
+            );
             },
           ),
 
@@ -84,7 +77,12 @@ class Settings extends StatelessWidget {
             title: "Backup & Recovery",
             subtitle: "Backup and restore your private data",
             onTap: () {
-              // Open Backup settings
+              Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const BackupSettings(),
+              ),
+            );
             },
           ),
 
@@ -96,7 +94,12 @@ class Settings extends StatelessWidget {
             title: "Storage",
             subtitle: "Manage vault storage and cache",
             onTap: () {
-              // Open Storage settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const StorageSettings(),
+                ),
+              );
             },
           ),
 
@@ -108,7 +111,12 @@ class Settings extends StatelessWidget {
             title: "App Settings",
             subtitle: "Calculator behavior and preferences",
             onTap: () {
-              // Open App settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AppSettings(),
+                ),
+              );
             },
           ),
 
@@ -120,7 +128,12 @@ class Settings extends StatelessWidget {
             title: "About",
             subtitle: "Version, privacy and app information",
             onTap: () {
-              // Open About page
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AboutPage(),
+                ),
+              );
             },
           ),
         ],
@@ -128,31 +141,7 @@ class Settings extends StatelessWidget {
     );
   }
 
-  // ==================================================================
-  // SECTION TITLE
-  // ==================================================================
 
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: 4,
-        bottom: 10,
-      ),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.1,
-          color: Colors.grey,
-        ),
-      ),
-    );
-  }
-
-  // ==================================================================
-  // SETTINGS TILE
-  // ==================================================================
 
   Widget _settingsTile(
     BuildContext context, {
