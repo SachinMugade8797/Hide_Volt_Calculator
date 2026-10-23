@@ -105,12 +105,24 @@ class _VideoPageState extends State<VideoPage> {
       );
     }
     return IconButton(
-      onPressed: () {
+      onPressed: () async {
         final box = Hive.box<Gallery>('gallery');
+        final trashBox = await Hive.openBox<Gallery>('trash');
         for (var key in selectedVideoKeys) {
-          box.delete(key);
+          final item = box.get(key);
+          if (item != null) {
+            trashBox.add(Gallery(
+              type: item.type,
+              thumbnailBytes: item.thumbnailBytes,
+              bytes: item.bytes,
+              dateTime: DateTime.now(),
+              localPath: item.localPath,
+            ));
+            box.delete(key);
+          }
         }
         _clearSelection();
+        Fluttertoast.showToast(msg: "Moved to trash");
       },
       icon: const Icon(Icons.delete),
     );
@@ -206,9 +218,18 @@ class VideoPlayerPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () {
+            onPressed: () async {
+              final trashBox = await Hive.openBox<Gallery>('trash');
+              trashBox.add(Gallery(
+                type: video.type,
+                thumbnailBytes: video.thumbnailBytes,
+                bytes: video.bytes,
+                dateTime: DateTime.now(),
+                localPath: video.localPath,
+              ));
               video.delete();
-              Navigator.pop(context);
+              Fluttertoast.showToast(msg: "Moved to trash");
+              if (context.mounted) Navigator.pop(context);
             },
           ),
         ],

@@ -106,12 +106,24 @@ class _DocumentsState extends State<Documents> {
               )
             else
               IconButton(
-                onPressed: () {
+                onPressed: () async {
                   final box = Hive.box<Gallery>('gallery');
+                  final trashBox = await Hive.openBox<Gallery>('trash');
                   for (final key in selectedKeys) {
-                    box.delete(key);
+                    final item = box.get(key);
+                    if (item != null) {
+                      trashBox.add(Gallery(
+                        type: item.type,
+                        thumbnailBytes: item.thumbnailBytes,
+                        bytes: item.bytes,
+                        dateTime: DateTime.now(),
+                        localPath: item.localPath,
+                      ));
+                      box.delete(key);
+                    }
                   }
                   _clearSelection();
+                  Fluttertoast.showToast(msg: "Moved to trash");
                 },
                 icon: const Icon(Icons.delete),
               ),

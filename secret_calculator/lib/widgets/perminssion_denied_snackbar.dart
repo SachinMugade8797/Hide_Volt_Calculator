@@ -6,7 +6,7 @@ void permissionDeniedSnackBar(BuildContext context) =>
       SnackBar(
         behavior: SnackBarBehavior.floating,
         elevation: 10,
-        content: const Text("Permission is required to add images"),
+        content: const Text("Permission is required to access media"),
         action: SnackBarAction(
           label: "Open Setting",
           onPressed: () => openAppSettings(),
