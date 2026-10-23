@@ -1,11 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:secret_calculator/models/gallery_model.dart';
-import 'package:secret_calculator/pages/setting_page.dart';
-import 'package:secret_calculator/ui/colors.dart';
-
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 import '../functions/storage_permission_check.dart';
+import '../models/gallery_model.dart';
+import '../pages/setting_page.dart';
+import '../pages/video_picker_page.dart';
+import '../ui/colors.dart';
 import '../widgets/perminssion_denied_snackbar.dart';
 
 class VideoPage extends StatefulWidget {
@@ -35,9 +39,7 @@ class _VideoPageState extends State<VideoPage> {
           future: Hive.openBox('gallery'),
           builder: (context, galleryBoxSnapshot) {
             if (galleryBoxSnapshot.hasError) {
-              return Center(
-                child: Text(galleryBoxSnapshot.error.toString()),
-              );
+              return Center(child: Text(galleryBoxSnapshot.error.toString()));
             }
             if (galleryBoxSnapshot.hasData && galleryBoxSnapshot.data != null) {
               return ValueListenableBuilder<Box<Gallery>>(
@@ -53,8 +55,11 @@ class _VideoPageState extends State<VideoPage> {
                     padding: const EdgeInsets.all(8),
                     itemCount: videos.length,
                     itemBuilder: (context, index) {
-                      return videoGrid(context, videos[index],
-                          selectedVideoKeys.contains(videos[index].key));
+                      return videoGrid(
+                        context,
+                        videos[index],
+                        selectedVideoKeys.contains(videos[index].key),
+                      );
                     },
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -65,21 +70,18 @@ class _VideoPageState extends State<VideoPage> {
                   );
                 },
               );
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
             }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             storagePermissionCheck(
-              onPermissionGranted: () async {
+              onPermissionGranted: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const VideoPlayerPage(video: null),
+                    builder: (context) => const VideoPickerPage(),
                   ),
                 );
               },
@@ -97,26 +99,21 @@ class _VideoPageState extends State<VideoPage> {
       return IconButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const SettingsPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const SettingsPage()),
         ),
         icon: const Icon(Icons.settings),
       );
-    } else {
-      return IconButton(
-        onPressed: () {
-          final box = Hive.box<Gallery>('gallery');
-          for (var key in selectedVideoKeys) {
-            box.delete(key);
-          }
-          selectionEnabled = false;
-          selectedVideoKeys.clear();
-          setState(() {});
-        },
-        icon: const Icon(Icons.delete),
-      );
     }
+    return IconButton(
+      onPressed: () {
+        final box = Hive.box<Gallery>('gallery');
+        for (var key in selectedVideoKeys) {
+          box.delete(key);
+        }
+        _clearSelection();
+      },
+      icon: const Icon(Icons.delete),
+    );
   }
 
   GestureDetector videoGrid(
@@ -131,10 +128,11 @@ class _VideoPageState extends State<VideoPage> {
           setState(() {});
           return;
         }
-        showDialog(
-          context: context,
-          barrierColor: Colors.transparent,
-          builder: (context) => VideoPlayerPage(video: video),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VideoPlayerPage(video: video),
+          ),
         );
       },
       onLongPress: () {
@@ -180,69 +178,58 @@ class _VideoPageState extends State<VideoPage> {
 }
 
 class VideoPlayerPage extends StatelessWidget {
-  final Gallery? video;
+  final Gallery video;
   const VideoPlayerPage({super.key, required this.video});
+
+  Future<void> _playVideo(BuildContext context) async {
+    try {
+      final dir = await getTemporaryDirectory();
+      final ext = video.localPath.split('.').last;
+      final file = File('${dir.path}/temp_${video.key}.$ext');
+      await file.writeAsBytes(video.bytes, flush: true);
+      final result = await OpenFilex.open(file.path);
+      if (result.type != ResultType.done) {
+        Fluttertoast.showToast(msg: result.message);
+      }
+    } catch (_) {
+      Fluttertoast.showToast(msg: "Could not open video");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (video == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text("Choose Videos"),
-        ),
-        body: const Center(child: Text("Video picker not added yet")),
-      );
-    }
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [popUpMenu(context)],
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              video.delete();
+              Navigator.pop(context);
+            },
+          ),
+        ],
       ),
       body: Center(
-        child: Image.memory(
-          video!.thumbnailBytes,
-          fit: BoxFit.contain,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            if (video.thumbnailBytes.isNotEmpty)
+              Image.memory(
+                video.thumbnailBytes,
+                fit: BoxFit.contain,
+              ),
+            IconButton(
+              iconSize: 72,
+              icon: const Icon(Icons.play_circle_fill, color: secondaryColor),
+              onPressed: () => _playVideo(context),
+            ),
+          ],
         ),
       ),
-    );
-  }
-
-  Widget popUpMenu(BuildContext context) {
-    return PopupMenuButton<int>(
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 1,
-          onTap: () {
-            video!.delete();
-            Navigator.pop(context);
-          },
-          child: menuItem(Icons.delete, "Delete", Colors.red),
-        ),
-      ],
-      offset: const Offset(0, 50),
-      color: mainColorDark,
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      constraints: const BoxConstraints(minWidth: 128),
-    );
-  }
-
-  Widget menuItem(IconData iconData, String lable, [Color? color]) {
-    return Row(
-      children: [
-        Icon(iconData, color: color),
-        const Spacer(),
-        Text(
-          lable,
-          style: TextStyle(
-            color: color ?? Colors.white,
-          ),
-        ),
-        const Spacer(),
-      ],
     );
   }
 }
