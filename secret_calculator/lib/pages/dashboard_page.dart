@@ -1,13 +1,116 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:secret_calculator/features/notes.dart';
 import 'package:secret_calculator/features/private_browser.dart';
 import 'package:secret_calculator/features/settings.dart';
 import 'package:secret_calculator/features/video_page.dart';
 import 'package:secret_calculator/features/documents.dart';
 import 'package:secret_calculator/features/gallery_page.dart';
+import 'package:secret_calculator/models/gallery_model.dart';
+import 'package:secret_calculator/pages/deleted_page.dart';
+import 'package:secret_calculator/pages/homepage.dart';
+import 'package:secret_calculator/ui/colors.dart';
 
 class VaultDashboardScreen extends StatelessWidget {
   const VaultDashboardScreen({super.key});
+
+  Future<void> _lockVault(BuildContext context) async {
+    final box = await Hive.openBox<String>('appPassword');
+    final password = box.get('password') ?? '';
+    if (context.mounted) {
+      Fluttertoast.showToast(msg: "Vault locked");
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+          builder: (context) => HomePage(appPassword: password),
+        ),
+        (route) => false,
+      );
+    }
+  }
+
+  Future<void> _openCamera(BuildContext context) async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: mainColorDark,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt_outlined, color: secondaryColor),
+                title: const Text("Take Photo", style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final picker = ImagePicker();
+                  final image = await picker.pickImage(source: ImageSource.camera);
+                  if (image != null) {
+                    final bytes = await image.readAsBytes();
+                    final box = await Hive.openBox<Gallery>('gallery');
+                    box.add(Gallery(
+                      type: 'image',
+                      thumbnailBytes: bytes,
+                      bytes: bytes,
+                      dateTime: DateTime.now(),
+                      localPath: image.path,
+                    ));
+                    Fluttertoast.showToast(msg: "Photo saved to vault", backgroundColor: Colors.green);
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined, color: secondaryColor),
+                title: const Text("Record Video", style: TextStyle(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  final picker = ImagePicker();
+                  final video = await picker.pickVideo(source: ImageSource.camera);
+                  if (video != null) {
+                    final bytes = await video.readAsBytes();
+                    final box = await Hive.openBox<Gallery>('gallery');
+                    box.add(Gallery(
+                      type: 'video',
+                      thumbnailBytes: Uint8List(0),
+                      bytes: bytes,
+                      dateTime: DateTime.now(),
+                      localPath: video.path,
+                    ));
+                    Fluttertoast.showToast(msg: "Video saved to vault", backgroundColor: Colors.green);
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openDownloads(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const BrowserDownloadsPage(),
+      ),
+    );
+  }
+
+  void _openDeleted(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const DeletedPage(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +130,7 @@ class VaultDashboardScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () => _lockVault(context),
             icon: const Icon(
               Icons.lock_outline_rounded,
               color: Colors.white,
@@ -144,22 +247,26 @@ class VaultDashboardScreen extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: const [
+                children: [
                   _FooterItem(
                     icon: Icons.camera_alt_outlined,
                     title: 'Camera',
+                    onTap: () => _openCamera(context),
                   ),
                   _FooterItem(
                     icon: Icons.download_outlined,
                     title: 'Downloads',
+                    onTap: () => _openDownloads(context),
                   ),
                   _FooterItem(
                     icon: Icons.lock_outline_rounded,
                     title: 'Lock',
+                    onTap: () => _lockVault(context),
                   ),
                   _FooterItem(
                     icon: Icons.delete_outline_rounded,
                     title: 'Deleted',
+                    onTap: () => _openDeleted(context),
                   ),
                 ],
               ),
@@ -241,37 +348,50 @@ class _MainFeature extends StatelessWidget {
 class _FooterItem extends StatelessWidget {
   final IconData icon;
   final String title;
+  final VoidCallback? onTap;
 
   const _FooterItem({
     required this.icon,
     required this.title,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 68,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 22,
-            color: const Color(0xFFBDBDBD),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF9E9E9E),
-              fontSize: 10,
-              fontWeight: FontWeight.w400,
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          child: SizedBox(
+            width: 56,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: const Color(0xFFBDBDBD),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF9E9E9E),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

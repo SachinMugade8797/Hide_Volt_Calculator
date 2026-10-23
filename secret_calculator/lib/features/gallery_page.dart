@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:secret_calculator/models/gallery_model.dart';
 import 'package:secret_calculator/pages/image_picker_page.dart';
 import 'package:secret_calculator/pages/imageview_page.dart';
 import 'package:secret_calculator/pages/setting_page.dart';
 import 'package:secret_calculator/ui/colors.dart';
-
 import '../functions/storage_permission_check.dart';
 import '../widgets/perminssion_denied_snackbar.dart';
 
@@ -20,6 +20,7 @@ class GalleryPage extends StatefulWidget {
 class _GalleryPageState extends State<GalleryPage> {
   bool selectionEnabled = false;
   List<int> selectedImageKeys = [];
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -36,9 +37,7 @@ class _GalleryPageState extends State<GalleryPage> {
           future: Hive.openBox('gallery'),
           builder: (context, galleryBoxSnapshot) {
             if (galleryBoxSnapshot.hasError) {
-              return Center(
-                child: Text(galleryBoxSnapshot.error.toString()),
-              );
+              return Center(child: Text(galleryBoxSnapshot.error.toString()));
             }
             if (galleryBoxSnapshot.hasData && galleryBoxSnapshot.data != null) {
               return ValueListenableBuilder<Box<Gallery>>(
@@ -54,8 +53,11 @@ class _GalleryPageState extends State<GalleryPage> {
                     padding: const EdgeInsets.all(8),
                     itemCount: images.length,
                     itemBuilder: (context, index) {
-                      return imageGrid(context, images[index],
-                          selectedImageKeys.contains(images[index].key));
+                      return imageGrid(
+                        context,
+                        images[index],
+                        selectedImageKeys.contains(images[index].key),
+                      );
                     },
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -66,17 +68,14 @@ class _GalleryPageState extends State<GalleryPage> {
                   );
                 },
               );
-            } else {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
             }
+            return const Center(child: CircularProgressIndicator());
           },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             storagePermissionCheck(
-              onPermissionGranted: () async {
+              onPermissionGranted: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -98,26 +97,33 @@ class _GalleryPageState extends State<GalleryPage> {
       return IconButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const SettingsPage(),
-          ),
+          MaterialPageRoute(builder: (context) => const SettingsPage()),
         ),
         icon: const Icon(Icons.settings),
       );
-    } else {
-      return IconButton(
-        onPressed: () {
-          final box = Hive.box<Gallery>('gallery');
-          for (var key in selectedImageKeys) {
+    }
+    return IconButton(
+      onPressed: () async {
+        final box = Hive.box<Gallery>('gallery');
+        final trashBox = await Hive.openBox<Gallery>('trash');
+        for (var key in selectedImageKeys) {
+          final item = box.get(key);
+          if (item != null) {
+            trashBox.add(Gallery(
+              type: item.type,
+              thumbnailBytes: item.thumbnailBytes,
+              bytes: item.bytes,
+              dateTime: DateTime.now(),
+              localPath: item.localPath,
+            ));
             box.delete(key);
           }
-          selectionEnabled = false;
-          selectedImageKeys.clear();
-          setState(() {});
-        },
-        icon: const Icon(Icons.delete),
-      );
-    }
+        }
+        _clearSelection();
+        Fluttertoast.showToast(msg: "Moved to trash");
+      },
+      icon: const Icon(Icons.delete),
+    );
   }
 
   GestureDetector imageGrid(

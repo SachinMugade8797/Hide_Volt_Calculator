@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import '../models/gallery_model.dart';
 import '../pages/setting_page.dart';
 import '../ui/colors.dart';
 
@@ -52,12 +54,25 @@ class _NotesState extends State<Notes> {
               )
             else
               IconButton(
-                onPressed: () {
+                onPressed: () async {
                   final box = Hive.box('notes');
+                  final trashBox = await Hive.openBox<Gallery>('trash');
                   for (final key in selectedKeys) {
-                    box.delete(key);
+                    final note = box.get(key);
+                    if (note != null) {
+                      final title = note['title'] ?? 'Untitled Note';
+                      trashBox.add(Gallery(
+                        type: 'note',
+                        thumbnailBytes: Uint8List(0),
+                        bytes: utf8.encode(jsonEncode(note)),
+                        dateTime: DateTime.now(),
+                        localPath: title,
+                      ));
+                      box.delete(key);
+                    }
                   }
                   _clearSelection();
+                  Fluttertoast.showToast(msg: "Moved to trash");
                 },
                 icon: const Icon(Icons.delete),
               ),

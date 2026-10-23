@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:secret_calculator/models/gallery_model.dart';
-
 import 'pages/dashboard_page.dart';
 import 'pages/homepage.dart';
 import 'pages/startpage.dart';
@@ -32,7 +31,6 @@ class MyApp extends StatelessWidget {
       title: 'Calculator',
       themeMode: AppTheme.themeMode,
       theme: AppTheme.themeData,
-      initialRoute: '/dashboard',
       routes: {
         '/dashboard': (context) => const VaultDashboardScreen(),
       },
